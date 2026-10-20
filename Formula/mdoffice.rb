@@ -11,11 +11,10 @@ class Mdoffice < Formula
   # open. As a cask it would give every user a Gatekeeper dialog over a
   # program that has no application.
   #
-  # No release of `mdoffice` exists yet, so there is nothing to download and no
-  # checksum to verify. The version below is a placeholder, and the URLs point
-  # at a release that was never published. `tools/update-formula.sh` replaces
-  # this file with the released formula — checksum included — as soon as there
-  # is a release to point at.
+  # No release of `mdoffice` exists yet: there is nothing to download and no
+  # checksum to verify, and the URLs below point at a version that was never
+  # published. `tools/update-formula.sh` replaces this file with the released
+  # formula, checksum included, as soon as there is a release to point at.
 
   on_macos do
     on_arm do

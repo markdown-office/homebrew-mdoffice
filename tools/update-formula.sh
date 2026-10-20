@@ -102,8 +102,10 @@ resolve_asset() {
   printf -v "${prefix}_checksum" '%s' "${checksum}"
 }
 
+# The status code is what tells a repository without a release from a broken
+# API, and this script reports either of them itself.
 status="$(curl "${curl_options[@]}" --output "${work}/release.json" --write-out '%{http_code}' \
-  "${api}/repos/${repo}/releases/latest" || true)"
+  "${api}/repos/${repo}/releases/latest" 2>/dev/null || true)"
 
 case "${status}" in
   200) ;;
