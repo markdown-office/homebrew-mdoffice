@@ -1,0 +1,81 @@
+name: update formula
+
+on:
+  schedule:
+    # Off the hour, because the scheduled workflows that start on the hour all
+    # arrive at the same moment.
+    - cron: "23 4 * * *"
+  workflow_dispatch:
+
+# Read-only by default. The job below widens this to what it needs.
+permissions:
+  contents: read
+
+jobs:
+  update:
+    name: open a pull request for the latest release
+    runs-on: ubuntu-latest
+    # The job pushes a branch and opens a pull request against it. It merges
+    # nothing: a formula that says what the release says is a thing a person
+    # should look at.
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # Writes the formula for the latest release, and leaves it alone when the
+      # release is not there or the formula already says what it says.
+      - name: write the formula for the latest release
+        run: tools/update-formula.sh
+
+      - name: open a pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if git diff --quiet -- Formula/mdoffice.rb; then
+            echo "The formula is up to date. There is nothing to propose."
+            exit 0
+          fi
+
+          version="$(sed -n 's|.*releases/download/v\([^/]*\)/.*|\1|p' Formula/mdoffice.rb | head -1)"
+          if [ -z "$version" ]; then
+            echo "The formula names no release." >&2
+            exit 1
+          fi
+          branch="formula-v${version}"
+
+          cat > "$RUNNER_TEMP/body.md" <<BODY
+          The formula in \`Formula/mdoffice.rb\` now describes ${version}.
+
+          \`tools/update-formula.sh\` wrote it from the release: the URLs of the two
+          release assets, and their SHA-256 checksums, which were computed from
+          the downloads and compared with the release's \`SHA256SUMS\`.
+
+          The macOS binary is ad-hoc signed and not notarised. Homebrew
+          quarantines casks and not formulae, so nothing installed from here is
+          quarantined.
+
+          A workflow opened this pull request and no workflow will merge it.
+          BODY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add Formula/mdoffice.rb
+          git commit -m "Update the formula to ${version}"
+
+          # The branch is this workflow's own, and a previous run may have left
+          # commits on it that this one does not have.
+          git push --force origin "$branch"
+
+          if gh pr view "$branch" --json number >/dev/null 2>&1; then
+            echo "The pull request for $branch is already open; the push above updated it."
+            exit 0
+          fi
+
+          gh pr create --base main --head "$branch" \
+            --title "Update the formula to ${version}" \
+            --body-file "$RUNNER_TEMP/body.md"
