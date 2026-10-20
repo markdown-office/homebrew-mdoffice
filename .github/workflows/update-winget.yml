@@ -1,0 +1,50 @@
+name: update the winget manifest
+
+on:
+  schedule:
+    # Off the hour, because the scheduled workflows that start on the hour all
+    # arrive at the same moment.
+    - cron: "41 4 * * *"
+  workflow_dispatch:
+
+# Read-only by default. The job below widens this to what it needs.
+permissions:
+  contents: read
+
+jobs:
+  update:
+    name: open a pull request for the latest release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # The manifest is written into the `winget-pkgs` fork rather than into this
+      # repository: a pull request has to be opened against that repository, and
+      # the files are only in it for the length of the pull request.
+      #
+      # The token is a personal access token rather than this workflow's own,
+      # because the workflow's own token is good for this repository and not for
+      # the fork. A missing token otherwise surfaces as an authentication failure
+      # several steps later, which says nothing about what to do about it. This
+      # says it.
+      - name: Is there a token for the fork?
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if [ -z "$WINGET_TOKEN" ]; then
+            echo "::error::WINGET_TOKEN is not set, so there is nothing to authenticate with."
+            echo "::error::Create a token with write access to fabeat/winget-pkgs, then add it"
+            echo "::error::under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      # Writes the manifest for the latest release and proposes it as a pull
+      # request. It leaves everything alone when the release is not there or the
+      # manifest already says what it says.
+      - name: write the manifest and propose it
+        env:
+          GITHUB_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          MDOFFICE_WINGET_SUBMIT: "true"
+        run: tools/update-winget-manifest.sh

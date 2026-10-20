@@ -26,6 +26,26 @@ merges nothing: a person reads the pull request and merges it.
 Run it by hand from the Actions tab, or wait for the daily run at 04:23 UTC.
 The script needs `curl` and `jq`; the runner has both.
 
+## Windows
+
+Windows is not in this tap. It is in
+[`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs), and this
+repository writes the manifest for it: `.github/workflows/update-winget.yml`
+asks for the same release, writes the three files a `winget` manifest is made
+of, and opens a pull request against the fork at
+[`fabeat/winget-pkgs`](https://github.com/fabeat/winget-pkgs). It merges
+nothing, for the same reason the formula's pull request is not merged.
+
+That workflow needs a token of its own — `WINGET_TOKEN`, a personal access
+token with write access to the fork — because this repository's own token is
+good for this repository and not for the fork. The workflow says so when it is
+not set, rather than failing later as an authentication error.
+
+The manifest is written through the API rather than by pushing to a clone:
+`winget-pkgs` holds a manifest for every package there is, and cloning it to
+add three files is a large thing to do for three files.
+
+
 ## The release assets
 
 The formula is written for the assets the release workflow publishes, and the
@@ -35,6 +55,7 @@ names are fixed here because the formula is generated from them:
 | --- | --- |
 | `mdoffice-<version>-macos-arm64` | macOS, Apple silicon |
 | `mdoffice-<version>-linux-x86_64` | Linux, x86-64 |
+| `mdoffice-<version>-windows-x64.exe` | Windows, x64 — the one the `winget` manifest installs |
 | `SHA256SUMS` | the checksums of the release's assets |
 
 The URLs are of the form
@@ -48,9 +69,6 @@ them with `SHA256SUMS` before it writes the formula, so a release whose sums
 file disagrees with its assets is refused rather than installed. A release whose
 assets are named otherwise is refused too, and the script says which asset it
 looked for.
-
-Windows is not in this tap. It is in
-[`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs).
 
 ## A formula, not a cask
 
@@ -82,5 +100,8 @@ flag to run:
 | `Formula/mdoffice.rb` | the formula, written by the update script |
 | `tools/update-formula.sh` | writes the formula from the latest release |
 | `tools/test-update-formula.sh` | checks the update script against a release that is not a release |
+| `tools/update-winget-manifest.sh` | writes the `winget` manifest from the latest release |
+| `tools/test-update-winget-manifest.sh` | checks that script against a release that is not a release |
 | `.github/workflows/update-formula.yml` | runs the script and opens the pull request |
-| `.github/workflows/ci.yml` | parses the formula and runs the test on every push |
+| `.github/workflows/update-winget.yml` | writes the manifest and opens the pull request against the fork |
+| `.github/workflows/ci.yml` | parses the formula and runs the tests on every push |

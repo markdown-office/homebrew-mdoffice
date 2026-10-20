@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   check:
-    name: the formula parses and the update script does what it says
+    name: the formula parses and the update scripts do what they say
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -19,8 +19,10 @@ jobs:
       - name: the formula parses
         run: ruby -c Formula/mdoffice.rb
 
-      # The update script is what writes the formula, so it is the part that
-      # has to keep working: it is checked against a release that is not a
-      # release.
-      - name: the update script does what it says
-        run: tools/test-update-formula.sh
+      # The update scripts are what write the formula and the manifest, so they are
+      # the parts that have to keep working: they are checked against a release
+      # that is not a release.
+      - name: the update scripts do what they say
+        run: |
+          tools/test-update-formula.sh
+          tools/test-update-winget-manifest.sh
