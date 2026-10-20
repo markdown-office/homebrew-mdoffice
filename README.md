@@ -34,7 +34,7 @@ names are fixed here because the formula is generated from them:
 | --- | --- |
 | `mdoffice-<version>-macos-arm64` | macOS, Apple silicon |
 | `mdoffice-<version>-linux-x86_64` | Linux, x86-64 |
-| `SHA256SUMS` | the checksums of every asset |
+| `SHA256SUMS` | the checksums of the release's assets |
 
 The URLs are of the form
 
@@ -44,7 +44,9 @@ https://github.com/markdown-office/mdoffice/releases/download/v<version>/<asset>
 
 `tools/update-formula.sh` computes the checksums from the downloads and compares
 them with `SHA256SUMS` before it writes the formula, so a release whose sums
-file disagrees with its assets is refused rather than installed.
+file disagrees with its assets is refused rather than installed. A release whose
+assets are named otherwise is refused too, and the script says which asset it
+looked for.
 
 Windows is not in this tap. It is in
 [`microsoft/winget-pkgs`](https://github.com/microsoft/winget-pkgs).
@@ -78,4 +80,6 @@ flag to run:
 | --- | --- |
 | `Formula/mdoffice.rb` | the formula, written by the update script |
 | `tools/update-formula.sh` | writes the formula from the latest release |
+| `tools/test-update-formula.sh` | checks the update script against a release that is not a release |
 | `.github/workflows/update-formula.yml` | runs the script and opens the pull request |
+| `.github/workflows/ci.yml` | parses the formula and runs the test on every push |

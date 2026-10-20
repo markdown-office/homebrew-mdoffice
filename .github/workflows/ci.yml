@@ -1,0 +1,26 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: the formula parses and the update script does what it says
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # A formula that does not parse is a formula that cannot be installed.
+      - name: the formula parses
+        run: ruby -c Formula/mdoffice.rb
+
+      # The update script is what writes the formula, so it is the part that
+      # has to keep working: it is checked against a release that is not a
+      # release.
+      - name: the update script does what it says
+        run: tools/test-update-formula.sh
