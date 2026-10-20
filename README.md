@@ -24,6 +24,7 @@ one only when the formula says something different from the release, and it
 merges nothing: a person reads the pull request and merges it.
 
 Run it by hand from the Actions tab, or wait for the daily run at 04:23 UTC.
+The script needs `curl` and `jq`; the runner has both.
 
 ## The release assets
 
