@@ -12,7 +12,8 @@ Usage: python3 tools/fake-github-api.py <port> <directory>
 import json
 import os
 import sys
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler
+from socketserver import ThreadingTCPServer
 from urllib.parse import urlparse
 
 PORT = int(sys.argv[1])
@@ -21,10 +22,16 @@ ROOT = sys.argv[2]
 # What the fork has already been asked for.
 STATE = {"refs": set(), "pulls": [], "written": set()}
 
+NOT_FOUND = "Not Found"
+CONTENTS = "/contents/"
+
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
-        pass
+        # The server is a fixture and its output is the test's output, so it
+        # says nothing: a line per request would be noise in the middle of the
+        # checks the test prints.
+        return
 
     def _json(self, code, payload):
         body = json.dumps(payload).encode()
@@ -74,7 +81,7 @@ class Handler(BaseHTTPRequestHandler):
             if branch in branches:
                 self._json(200, {"object": {"sha": "the-branch"}})
             else:
-                self._json(404, {"message": "Not Found"})
+                self._json(404, {"message": NOT_FOUND})
 
             return
 
@@ -82,17 +89,17 @@ class Handler(BaseHTTPRequestHandler):
             self._json(200, STATE["pulls"])
             return
 
-        if "/contents/" in path:
-            name = path.split("/contents/", 1)[1]
+        if CONTENTS in path:
+            name = path.split(CONTENTS, 1)[1]
 
             if name in STATE["written"]:
                 self._json(200, {"sha": "the-file"})
             else:
-                self._json(404, {"message": "Not Found"})
+                self._json(404, {"message": NOT_FOUND})
 
             return
 
-        self._json(404, {"message": "Not Found"})
+        self._json(404, {"message": NOT_FOUND})
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length", 0))
@@ -120,7 +127,7 @@ class Handler(BaseHTTPRequestHandler):
                     return
 
             pull = {
-                "html_url": f"http://127.0.0.1:{PORT}/pull/{len(STATE['pulls']) + 1}",
+                "html_url": f"/pull/{len(STATE['pulls']) + 1}",
                 "head": {"ref": branch},
             }
             STATE["pulls"].append(pull)
@@ -128,21 +135,21 @@ class Handler(BaseHTTPRequestHandler):
 
             return
 
-        self._json(404, {"message": "Not Found"})
+        self._json(404, {"message": NOT_FOUND})
 
     def do_PUT(self):
         length = int(self.headers.get("Content-Length", 0))
-        payload = json.loads(self.rfile.read(length) or b"{}")
+        self.rfile.read(length)
         path = urlparse(self.path).path
 
-        if "/contents/" in path:
-            name = path.split("/contents/", 1)[1]
+        if CONTENTS in path:
+            name = path.split(CONTENTS, 1)[1]
             STATE["written"].add(name)
             self._json(200, {"content": {"sha": "the-file"}})
 
             return
 
-        self._json(404, {"message": "Not Found"})
+        self._json(404, {"message": NOT_FOUND})
 
 
-HTTPServer(("127.0.0.1", PORT), Handler).serve_forever()
+ThreadingTCPServer(("127.0.0.1", PORT), Handler).serve_forever()
