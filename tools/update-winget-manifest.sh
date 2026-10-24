@@ -174,9 +174,17 @@ then
   exit 1
 fi
 
-curl "${curl_options[@]}" --request POST \
-  --data "{\"ref\": \"refs/heads/${branch}\", \"sha\": \"${base}\"}" \
-  "${api}/repos/${fork}/git/refs" >/dev/null
+# The branch is made only when it is not there. The workflow runs every day and
+# the release does not change every day, so the second run is the ordinary case
+# rather than an accident, and GitHub refuses a reference that already exists.
+ref="$(curl "${curl_options[@]}" "${api}/repos/${fork}/git/ref/heads/${branch}" | jq -r '.object.sha // ""' || true)"
+
+if [[ -z "${ref}" || "${ref}" == "null" ]]
+then
+  curl "${curl_options[@]}" --request POST \
+    --data "{\"ref\": \"refs/heads/${branch}\", \"sha\": \"${base}\"}" \
+    "${api}/repos/${fork}/git/refs" >/dev/null
+fi
 
 for file in "${directory}"/*.yaml
 do
@@ -201,6 +209,20 @@ do
   curl "${curl_options[@]}" --request PUT --data "${payload}" \
     "${api}/repos/${fork}/contents/${path_in_repo}" >/dev/null
 done
+
+# The pull request is opened only when there is not one for the branch. GitHub
+# refuses a second pull request for the same branch, and the run that follows
+# the first would fail on it rather than on anything else.
+owner="${fork%%/*}"
+open="$(curl "${curl_options[@]}" "${api}/repos/${fork}/pulls?head=${owner}:${branch}&state=open" \
+  | jq -r '.[0].html_url // ""' || true)"
+
+if [[ -n "${open}" && "${open}" != "null" ]]
+then
+  echo "The pull request for ${version} is already open: ${open}"
+
+  exit 0
+fi
 
 pull="$(curl "${curl_options[@]}" --request POST \
   --data "{\"title\": \"Add ${identifier} ${version}\", \"head\": \"${branch}\", \"base\": \"master\", \"body\": \"The manifest for ${identifier} ${version}, generated from the release.\"}" \

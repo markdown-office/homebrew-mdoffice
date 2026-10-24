@@ -7,8 +7,10 @@
 # script that opens a pull request for nothing trains everyone to ignore its
 # pull requests.
 #
-# The release is served by a plain file server over a directory that holds the
-# files a release would hold. A path that is not there is a 404, which is what
+# The release is served over a directory that holds the files a release would
+# hold, and the GitHub API is served by `tools/fake-github-api.py`, which
+# answers the endpoints the script calls and refuses the ones that can only be
+# used once — as GitHub does. A path that is not there is a 404, which is what
 # the GitHub API answers for a repository without a release.
 
 set -euo pipefail
@@ -17,15 +19,7 @@ here="$(cd "$(dirname "${0}")" && pwd)"
 root="$(dirname "${here}")"
 
 work="$(mktemp -d)"
-server_pid=""
 cleanup() {
-  if [[ -n "${server_pid}" ]]
-  then
-    kill "${server_pid}" 2>/dev/null || true
-    # Reaping the job is what prints "Terminated"; the wait is what keeps it
-    # out of the test's output.
-    wait "${server_pid}" 2>/dev/null || true
-  fi
   rm -rf "${work}"
 }
 trap cleanup EXIT
@@ -58,22 +52,17 @@ outcome_of() {
   fi
 }
 
-port="$(python3 -c 'import socket; s = socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')"
-api="http://127.0.0.1:${port}"
+api="https://api.github.test"
 www="${work}/www"
-mkdir -p "${www}/repos/markdown-office/mdoffice/releases" "${www}/assets"
+mkdir -p "${www}/assets" "${work}/bin"
 
-python3 -m http.server "${port}" --bind 127.0.0.1 --directory "${www}" >/dev/null 2>&1 &
-server_pid=$!
-
-for _ in {1..50}
-do
-  if curl -s -o /dev/null "${api}/assets/"
-  then
-    break
-  fi
-  sleep 0.1
-done
+# The GitHub the script is run against is a `curl` that answers from a
+# directory, on the path in place of the real one. The release's assets are
+# files, and are given to the script as `file://` URLs.
+cp "${root}/tools/fake-curl.sh" "${work}/bin/curl"
+chmod +x "${work}/bin/curl"
+export PATH="${work}/bin:${PATH}"
+export FIXTURE_STATE="${work}/state"
 
 export MDOFFICE_API="${api}"
 export MDOFFICE_REPO="markdown-office/mdoffice"
@@ -94,12 +83,12 @@ echo "a release"
 printf 'the windows binary\n' >"${www}/assets/mdoffice-1.2.3-windows-x64.exe"
 sum="$(shasum -a 256 "${www}/assets/mdoffice-1.2.3-windows-x64.exe" | cut -d' ' -f1)"
 
-cat >"${www}/repos/markdown-office/mdoffice/releases/latest" <<JSON
+cat >"${FIXTURE_STATE}/release.json" <<JSON
 {
   "tag_name": "v1.2.3",
   "published_at": "2026-10-20T10:00:00Z",
   "assets": [
-    { "name": "mdoffice-1.2.3-windows-x64.exe", "browser_download_url": "${api}/assets/mdoffice-1.2.3-windows-x64.exe" }
+    { "name": "mdoffice-1.2.3-windows-x64.exe", "browser_download_url": "file://${www}/assets/mdoffice-1.2.3-windows-x64.exe" }
   ]
 }
 JSON
@@ -134,12 +123,12 @@ check "names the package" "$(count_of "${locale_text}" 'PackageIdentifier: markd
 check "is a locale manifest" "$(count_of "${locale_text}" 'ManifestType: defaultLocale')" "1"
 
 echo "a release without the windows asset"
-cat >"${www}/repos/markdown-office/mdoffice/releases/latest" <<JSON
+cat >"${FIXTURE_STATE}/release.json" <<JSON
 {
   "tag_name": "v1.2.3",
   "published_at": "2026-10-20T10:00:00Z",
   "assets": [
-    { "name": "mdoffice-1.2.3-macos-arm64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-macos-arm64" }
+    { "name": "mdoffice-1.2.3-macos-arm64", "browser_download_url": "file://${www}/assets/mdoffice-1.2.3-macos-arm64" }
   ]
 }
 JSON
@@ -150,6 +139,36 @@ outcome="$(outcome_of "${status}")"
 count="$(count_of "${output}" 'no asset named mdoffice-1.2.3-windows-x64.exe')"
 check "fails" "${outcome}" "failed"
 check "says which asset is missing" "${count}" "1"
+
+# The workflow runs every day and the release does not change every day, so the
+# second run for a version is the ordinary case rather than an accident. It has
+# to succeed: the branch is there already and the pull request is open already,
+# and GitHub refuses both a reference that exists and a second pull request for
+# the same branch.
+echo "the same release, twice, with the pull request open"
+cat >"${FIXTURE_STATE}/release.json" <<JSON
+{
+  "tag_name": "v1.2.3",
+  "published_at": "2026-10-20T10:00:00Z",
+  "assets": [
+    { "name": "mdoffice-1.2.3-windows-x64.exe", "browser_download_url": "file://${www}/assets/mdoffice-1.2.3-windows-x64.exe" }
+  ]
+}
+JSON
+
+export MDOFFICE_WINGET_SUBMIT="true"
+
+status=0
+output="$("${root}/tools/update-winget-manifest.sh" 2>&1)" || status=$?
+check "the first run exits without an error" "${status}" "0"
+count="$(count_of "${output}" 'The pull request is')"
+check "the first run opens the pull request" "${count}" "1"
+
+status=0
+output="$("${root}/tools/update-winget-manifest.sh" 2>&1)" || status=$?
+check "the second run exits without an error" "${status}" "0"
+count="$(count_of "${output}" 'is already open')"
+check "the second run says the pull request is open" "${count}" "1"
 
 if [[ "${failures}" -ne 0 ]]
 then
