@@ -20,7 +20,7 @@ state="${FIXTURE_STATE:?the directory this keeps its state in}"
 mkdir -p "${state}"
 
 # What GitHub answers with when it has nothing.
-NOT_FOUND='{"message":"Not Found"}' 
+NOT_FOUND='{"message":"Not Found"}'
 
 for remembered in refs pulls files
 do
