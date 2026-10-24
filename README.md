@@ -104,6 +104,7 @@ flag to run:
 | `tools/test-update-formula.sh` | checks the update script against a release that is not a release |
 | `tools/update-winget-manifest.sh` | writes the `winget` manifest from the latest release |
 | `tools/test-update-winget-manifest.sh` | checks that script against a release that is not a release |
+| `tools/fake-github-api.py` | the GitHub the two tests are run against |
 | `.github/workflows/update-formula.yml` | runs the script and opens the pull request |
 | `.github/workflows/update-winget.yml` | writes the manifest and opens the pull request against the fork |
 | `.github/workflows/ci.yml` | parses the formula and runs the tests on every push |

@@ -50,7 +50,7 @@ jobs:
           cat > "$RUNNER_TEMP/body.md" <<BODY
           The formula in \`Formula/mdoffice.rb\` now describes ${version}.
 
-          \`tools/update-formula.sh\` wrote it from the release: the URLs of the two
+          \`tools/update-formula.sh\` wrote it from the release: the URLs of the
           release assets, and their SHA-256 checksums, which were computed from
           the downloads and compared with the release's \`SHA256SUMS\`.
 

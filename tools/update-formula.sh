@@ -10,7 +10,9 @@
 # this repository's README documents:
 #
 #   mdoffice-<version>-macos-arm64
+#   mdoffice-<version>-macos-x86_64
 #   mdoffice-<version>-linux-x86_64
+#   mdoffice-<version>-linux-aarch64
 #   SHA256SUMS
 #
 # Environment:
