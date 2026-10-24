@@ -136,8 +136,10 @@ else
   echo "The release has no SHA256SUMS; the checksums are computed from the assets."
 fi
 
-resolve_asset macos-arm64 macos
-resolve_asset linux-x86_64 linux
+resolve_asset macos-arm64 macos_arm64
+resolve_asset macos-x86_64 macos_x86_64
+resolve_asset linux-x86_64 linux_x86_64
+resolve_asset linux-aarch64 linux_aarch64
 
 # The template is written to a file first: a heredoc inside a command
 # substitution is parsed by bash as a nested command, and an apostrophe in the
@@ -158,15 +160,25 @@ class Mdoffice < Formula
 
   on_macos do
     on_arm do
-      url "@@MACOS_URL@@"
-      sha256 "@@MACOS_SHA256@@"
+      url "@@MACOS_ARM64_URL@@"
+      sha256 "@@MACOS_ARM64_SHA256@@"
+    end
+
+    on_intel do
+      url "@@MACOS_X86_64_URL@@"
+      sha256 "@@MACOS_X86_64_SHA256@@"
     end
   end
 
   on_linux do
     on_intel do
-      url "@@LINUX_URL@@"
-      sha256 "@@LINUX_SHA256@@"
+      url "@@LINUX_X86_64_URL@@"
+      sha256 "@@LINUX_X86_64_SHA256@@"
+    end
+
+    on_arm do
+      url "@@LINUX_AARCH64_URL@@"
+      sha256 "@@LINUX_AARCH64_SHA256@@"
     end
   end
 
@@ -198,10 +210,14 @@ end
 RUBY
 
 template="$(cat "${work}/template.rb")"
-template="${template//@@MACOS_URL@@/${macos_url}}"
-template="${template//@@MACOS_SHA256@@/${macos_checksum}}"
-template="${template//@@LINUX_URL@@/${linux_url}}"
-template="${template//@@LINUX_SHA256@@/${linux_checksum}}"
+template="${template//@@MACOS_ARM64_URL@@/${macos_arm64_url}}"
+template="${template//@@MACOS_ARM64_SHA256@@/${macos_arm64_checksum}}"
+template="${template//@@MACOS_X86_64_URL@@/${macos_x86_64_url}}"
+template="${template//@@MACOS_X86_64_SHA256@@/${macos_x86_64_checksum}}"
+template="${template//@@LINUX_X86_64_URL@@/${linux_x86_64_url}}"
+template="${template//@@LINUX_X86_64_SHA256@@/${linux_x86_64_checksum}}"
+template="${template//@@LINUX_AARCH64_URL@@/${linux_aarch64_url}}"
+template="${template//@@LINUX_AARCH64_SHA256@@/${linux_aarch64_checksum}}"
 
 current=""
 if [[ -f "${formula}" ]]

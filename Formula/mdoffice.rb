@@ -20,11 +20,19 @@ class Mdoffice < Formula
     on_arm do
       url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-macos-arm64"
     end
+
+    on_intel do
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-macos-x86_64"
+    end
   end
 
   on_linux do
     on_intel do
       url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-linux-x86_64"
+    end
+
+    on_arm do
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-linux-aarch64"
     end
   end
 
