@@ -19,6 +19,9 @@ set -euo pipefail
 state="${FIXTURE_STATE:?the directory this keeps its state in}"
 mkdir -p "${state}"
 
+# What GitHub answers with when it has nothing.
+NOT_FOUND='{"message":"Not Found"}' 
+
 for remembered in refs pulls files
 do
   touch "${state}/${remembered}"
@@ -72,7 +75,7 @@ case "${method}" in
           body="$(cat "${state}/release.json")"
         else
           code="404"
-          body='{"message":"Not Found"}'
+          body="${NOT_FOUND}"
         fi
         ;;
       */git/ref/heads/master)
@@ -86,7 +89,7 @@ case "${method}" in
           body='{"object":{"sha":"the-branch"}}'
         else
           code="404"
-          body='{"message":"Not Found"}'
+          body="${NOT_FOUND}"
         fi
         ;;
       */pulls)
@@ -109,12 +112,12 @@ case "${method}" in
           body='{"sha":"the-file"}'
         else
           code="404"
-          body='{"message":"Not Found"}'
+          body="${NOT_FOUND}"
         fi
         ;;
       *)
         code="404"
-        body='{"message":"Not Found"}'
+        body="${NOT_FOUND}"
         ;;
     esac
     ;;
@@ -147,7 +150,7 @@ case "${method}" in
         ;;
       *)
         code="404"
-        body='{"message":"Not Found"}'
+        body="${NOT_FOUND}"
         ;;
     esac
     ;;
@@ -159,9 +162,13 @@ case "${method}" in
         ;;
       *)
         code="404"
-        body='{"message":"Not Found"}'
+        body="${NOT_FOUND}"
         ;;
     esac
+    ;;
+  *)
+    code="404"
+    body="${NOT_FOUND}"
     ;;
 esac
 
