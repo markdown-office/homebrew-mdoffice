@@ -107,12 +107,18 @@ check "leaves the formula alone" "${state}" "same"
 
 echo "a release"
 printf 'the macos binary\n' >"${www}/assets/mdoffice-1.2.3-macos-arm64"
+printf 'the macos intel binary\n' >"${www}/assets/mdoffice-1.2.3-macos-x86_64"
 printf 'the linux binary\n' >"${www}/assets/mdoffice-1.2.3-linux-x86_64"
+printf 'the linux arm binary\n' >"${www}/assets/mdoffice-1.2.3-linux-aarch64"
 macos_sum="$(shasum -a 256 "${www}/assets/mdoffice-1.2.3-macos-arm64" | cut -d' ' -f1)"
+macos_intel_sum="$(shasum -a 256 "${www}/assets/mdoffice-1.2.3-macos-x86_64" | cut -d' ' -f1)"
 linux_sum="$(shasum -a 256 "${www}/assets/mdoffice-1.2.3-linux-x86_64" | cut -d' ' -f1)"
+linux_arm_sum="$(shasum -a 256 "${www}/assets/mdoffice-1.2.3-linux-aarch64" | cut -d' ' -f1)"
 {
   printf '%s  mdoffice-1.2.3-macos-arm64\n' "${macos_sum}"
+  printf '%s  mdoffice-1.2.3-macos-x86_64\n' "${macos_intel_sum}"
   printf '%s  mdoffice-1.2.3-linux-x86_64\n' "${linux_sum}"
+  printf '%s  mdoffice-1.2.3-linux-aarch64\n' "${linux_arm_sum}"
 } >"${www}/assets/SHA256SUMS"
 
 cat >"${www}/repos/markdown-office/mdoffice/releases/latest" <<JSON
@@ -120,7 +126,9 @@ cat >"${www}/repos/markdown-office/mdoffice/releases/latest" <<JSON
   "tag_name": "v1.2.3",
   "assets": [
     { "name": "mdoffice-1.2.3-macos-arm64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-macos-arm64" },
+    { "name": "mdoffice-1.2.3-macos-x86_64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-macos-x86_64" },
     { "name": "mdoffice-1.2.3-linux-x86_64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-linux-x86_64" },
+    { "name": "mdoffice-1.2.3-linux-aarch64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-linux-aarch64" },
     { "name": "SHA256SUMS", "browser_download_url": "${api}/assets/SHA256SUMS" }
   ]
 }
@@ -132,12 +140,20 @@ written="$(cat "${formula}")"
 check "exits without an error" "${status}" "0"
 count="$(count_of "${written}" 'assets/mdoffice-1.2.3-macos-arm64')"
 check "writes the macos url" "${count}" "1"
+count="$(count_of "${written}" 'assets/mdoffice-1.2.3-macos-x86_64')"
+check "writes the macos intel url" "${count}" "1"
 count="$(count_of "${written}" 'assets/mdoffice-1.2.3-linux-x86_64')"
 check "writes the linux url" "${count}" "1"
+count="$(count_of "${written}" 'assets/mdoffice-1.2.3-linux-aarch64')"
+check "writes the linux arm url" "${count}" "1"
 count="$(count_of "${written}" "sha256 \"${macos_sum}\"")"
 check "writes the macos checksum" "${count}" "1"
+count="$(count_of "${written}" "sha256 \"${macos_intel_sum}\"")"
+check "writes the macos intel checksum" "${count}" "1"
 count="$(count_of "${written}" "sha256 \"${linux_sum}\"")"
 check "writes the linux checksum" "${count}" "1"
+count="$(count_of "${written}" "sha256 \"${linux_arm_sum}\"")"
+check "writes the linux arm checksum" "${count}" "1"
 
 echo "the same release"
 before="$(cat "${formula}")"
@@ -159,19 +175,21 @@ state="$(state_of "${formula}" "${before}")"
 check "fails" "${outcome}" "failed"
 check "leaves the formula alone" "${state}" "same"
 
-echo "a release without the linux asset"
+echo "a release without the linux arm asset"
 cat >"${www}/repos/markdown-office/mdoffice/releases/latest" <<JSON
 {
   "tag_name": "v1.2.3",
   "assets": [
-    { "name": "mdoffice-1.2.3-macos-arm64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-macos-arm64" }
+    { "name": "mdoffice-1.2.3-macos-arm64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-macos-arm64" },
+    { "name": "mdoffice-1.2.3-macos-x86_64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-macos-x86_64" },
+    { "name": "mdoffice-1.2.3-linux-x86_64", "browser_download_url": "${api}/assets/mdoffice-1.2.3-linux-x86_64" }
   ]
 }
 JSON
 status=0
 output="$("${root}/tools/update-formula.sh" 2>&1)" || status=$?
 outcome="$(outcome_of "${status}")"
-count="$(count_of "${output}" 'no asset named mdoffice-1.2.3-linux-x86_64')"
+count="$(count_of "${output}" 'no asset named mdoffice-1.2.3-linux-aarch64')"
 state="$(state_of "${formula}" "${before}")"
 check "fails" "${outcome}" "failed"
 check "says which asset is missing" "${count}" "1"

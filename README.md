@@ -54,7 +54,9 @@ names are fixed here because the formula is generated from them:
 | Asset | |
 | --- | --- |
 | `mdoffice-<version>-macos-arm64` | macOS, Apple silicon |
+| `mdoffice-<version>-macos-x86_64` | macOS, Intel |
 | `mdoffice-<version>-linux-x86_64` | Linux, x86-64 |
+| `mdoffice-<version>-linux-aarch64` | Linux, ARM |
 | `mdoffice-<version>-windows-x64.exe` | Windows, x64 — the one the `winget` manifest installs |
 | `SHA256SUMS` | the checksums of the release's assets |
 
