@@ -170,6 +170,22 @@ check "the second run exits without an error" "${status}" "0"
 count="$(count_of "${output}" 'is already open')"
 check "the second run says the pull request is open" "${count}" "1"
 
+# Where the files are written in the repository, which is not where they are
+# written on the disk. A manifest lives under `manifests/` in `winget-pkgs`, and
+# the two paths are the same until one of them is wrong — which is what the
+# version directory in the working directory looks like, and what made the path
+# in the repository wrong without anything saying so.
+written="$(cat "${FIXTURE_STATE}/files")"
+for name in markdown-office.mdoffice.yaml markdown-office.mdoffice.installer.yaml markdown-office.mdoffice.locale.en-US.yaml
+do
+  # "at least once" rather than a count: the scenario above runs the script
+  # twice, and what is being asked is where the file is written, not how often.
+  check "writes ${name} under manifests/" \
+    "$([[ "${written}" == *"manifests/m/markdown-office/mdoffice/1.2.3/${name}"* ]] && echo yes || echo no)" "yes"
+done
+check "writes nothing outside manifests/" \
+  "$(count_of "${written}" '^m/markdown-office')" "0"
+
 if [[ "${failures}" -ne 0 ]]
 then
   echo "${failures} check(s) failed."
