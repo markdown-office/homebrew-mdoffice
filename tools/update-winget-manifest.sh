@@ -20,7 +20,7 @@
 #   MDOFFICE_API             the GitHub API to ask          (default https://api.github.com)
 #   MDOFFICE_REPO            the repository to ask about    (default markdown-office/mdoffice)
 #   MDOFFICE_WINGET_OUTPUT   where to write the manifest   (default manifests)
-#   MDOFFICE_WINGET_FORK     the fork to propose against   (default fabeat/winget-pkgs)
+#   MDOFFICE_WINGET_FORK     the fork to propose against   (default markdown-office/winget-pkgs)
 #   MDOFFICE_WINGET_SUBMIT   open the pull request         (default false)
 #   GITHUB_TOKEN             sent to the API when it is set
 
@@ -29,7 +29,7 @@ set -euo pipefail
 api="${MDOFFICE_API:-https://api.github.com}"
 repo="${MDOFFICE_REPO:-markdown-office/mdoffice}"
 output="${MDOFFICE_WINGET_OUTPUT:-manifests}"
-fork="${MDOFFICE_WINGET_FORK:-fabeat/winget-pkgs}"
+fork="${MDOFFICE_WINGET_FORK:-markdown-office/winget-pkgs}"
 submit="${MDOFFICE_WINGET_SUBMIT:-false}"
 
 identifier="markdown-office.mdoffice"
@@ -190,7 +190,12 @@ for file in "${directory}"/*.yaml
 do
   name_in_repo="$(basename "${file}")"
   content="$(base64 <"${file}" | tr -d '\n')"
-  path_in_repo="m/markdown-office/mdoffice/${version}/${name_in_repo}"
+
+  # The path in the repository, and not the path in the working directory. A
+  # manifest lives under `manifests/` in `winget-pkgs` — `manifests/m/<publisher>/<package>/<version>/`
+  # — and the working directory is the same path, which is why the two look alike
+  # until one of them is wrong.
+  path_in_repo="manifests/m/markdown-office/mdoffice/${version}/${name_in_repo}"
 
   # The API refuses to write a file that is already there without the hash of what
   # is there, and refuses to write a new one with a hash at all. The version a

@@ -35,7 +35,7 @@ jobs:
         run: |
           if [ -z "$WINGET_TOKEN" ]; then
             echo "::error::WINGET_TOKEN is not set, so there is nothing to authenticate with."
-            echo "::error::Create a token with write access to fabeat/winget-pkgs, then add it"
+            echo "::error::Create a token with write access to markdown-office/winget-pkgs, then add it"
             echo "::error::under Settings -> Secrets and variables -> Actions."
             exit 1
           fi
