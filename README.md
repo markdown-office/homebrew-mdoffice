@@ -33,8 +33,12 @@ Windows is not in this tap. It is in
 repository writes the manifest for it: `.github/workflows/update-winget.yml`
 asks for the same release, writes the three files a `winget` manifest is made
 of, and opens a pull request against the fork at
-[`fabeat/winget-pkgs`](https://github.com/fabeat/winget-pkgs). It merges
-nothing, for the same reason the formula's pull request is not merged.
+[`markdown-office/winget-pkgs`](https://github.com/markdown-office/winget-pkgs).
+It merges nothing, for the same reason the formula's pull request is not merged.
+
+The fork is the organisation's, so that the manifest and the pull request that
+carries it are under the same name as the package. The pull request against
+`microsoft/winget-pkgs` itself is opened from that fork, by a person.
 
 That workflow needs a token of its own — `WINGET_TOKEN`, a personal access
 token with write access to the fork — because this repository's own token is
