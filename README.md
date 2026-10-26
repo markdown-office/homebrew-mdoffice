@@ -9,13 +9,13 @@ brew tap markdown-office/mdoffice
 brew install mdoffice
 ```
 
-## There is no release yet
+## The formula is written from the release
 
-`mdoffice` has not been released. The formula in `Formula/mdoffice.rb` is a
-placeholder: it points at a version that was never published and carries no
-checksum, because there is no file to checksum. `brew install mdoffice` fails
-with a 404 until the first release is published and the pull request that
-carries its formula is merged.
+The formula in `Formula/mdoffice.rb` is the release's own assets: the URL of the
+file for the machine the formula is installed on, and its SHA-256. The checksum
+is computed from the download and compared with the release's `SHA256SUMS`
+before the formula is written, so a release whose sums file disagrees with its
+assets is refused rather than installed.
 
 The tap updates itself. `.github/workflows/update-formula.yml` asks GitHub for
 the latest `markdown-office/mdoffice` release, downloads the assets, computes
@@ -38,7 +38,8 @@ It merges nothing, for the same reason the formula's pull request is not merged.
 
 The fork is the organisation's, so that the manifest and the pull request that
 carries it are under the same name as the package. The pull request against
-`microsoft/winget-pkgs` itself is opened from that fork, by a person.
+`microsoft/winget-pkgs` itself is opened from that fork, by a person — the
+workflow stops at the fork, where the manifest is reviewed.
 
 That workflow needs a token of its own — `WINGET_TOKEN`, a personal access
 token with write access to the fork — because this repository's own token is
