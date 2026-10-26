@@ -165,7 +165,15 @@ fi
 # The pull request is opened through the API rather than by pushing to a clone:
 # the repository holds a manifest for every package there is, and cloning it to
 # add three files is a large thing to do for three files.
-branch="manifests/${identifier}/${version}"
+#
+# The branch is named for the package and the version, and nothing else. The
+# branch ends up as the head of a pull request against another repository — the
+# fork this is written in is the staging area, and the submission to
+# `microsoft/winget-pkgs` is a pull request from it — and a head is named by a
+# path in the API, where a component that is a version with dots in it is a
+# component that cannot be read. `manifests/markdown-office.mdoffice/0.1.1` is
+# refused; `mdoffice-0.1.1` is not.
+branch="mdoffice-${version}"
 base="$(curl "${curl_options[@]}" "${api}/repos/${fork}/git/ref/heads/master" | jq -r '.object.sha')"
 
 if [[ -z "${base}" || "${base}" == "null" ]]

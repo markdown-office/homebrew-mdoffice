@@ -186,6 +186,15 @@ done
 check "writes nothing outside manifests/" \
   "$(count_of "${written}" '^m/markdown-office')" "0"
 
+# The name of the branch, which is load-bearing: it ends up as the head of a
+# pull request against another repository, and a head is named by a path in the
+# API, where a component that is a version with dots in it cannot be read.
+branch_name="$(cat "${FIXTURE_STATE}/refs" | head -1)"
+check "names the branch for the package and the version" \
+  "${branch_name}" "mdoffice-1.2.3"
+check "names the branch with no directory in it" \
+  "$([[ "${branch_name}" == */* ]] && echo yes || echo no)" "no"
+
 if [[ "${failures}" -ne 0 ]]
 then
   echo "${failures} check(s) failed."
