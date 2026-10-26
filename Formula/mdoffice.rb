@@ -10,29 +10,28 @@ class Mdoffice < Formula
   # a command: it installs into `$(brew --prefix)/bin` and there is no bundle to
   # open. As a cask it would give every user a Gatekeeper dialog over a
   # program that has no application.
-  #
-  # No release of `mdoffice` exists yet: there is nothing to download and no
-  # checksum to verify, and the URLs below point at a version that was never
-  # published. `tools/update-formula.sh` replaces this file with the released
-  # formula, checksum included, as soon as there is a release to point at.
 
   on_macos do
     on_arm do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-macos-arm64"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.1/mdoffice-0.1.1-macos-arm64"
+      sha256 "ff8f38fb9aeefa39eb4889815c834ee587543ad12e174c57b91f720d2c36cb46"
     end
 
     on_intel do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-macos-x86_64"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.1/mdoffice-0.1.1-macos-x86_64"
+      sha256 "6b59651ae33b51a7674d2b938d5576d79ca0ec1908b6f409b70c2d4143065df8"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-linux-x86_64"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.1/mdoffice-0.1.1-linux-x86_64"
+      sha256 "291485db259ce2e9df6cae993d58db554e97dbb8cc4b7c91f03bf374eff7790c"
     end
 
     on_arm do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.0.0/mdoffice-0.0.0-linux-aarch64"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.1/mdoffice-0.1.1-linux-aarch64"
+      sha256 "27a0cffaae87607517635758176c532f919beb27ef9d11d3ceef74ac9a972dda"
     end
   end
 
