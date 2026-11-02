@@ -13,25 +13,25 @@ class Mdoffice < Formula
 
   on_macos do
     on_arm do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.2/mdoffice-0.1.2-macos-arm64"
-      sha256 "0ab25e74a208b4bf8d18583bad656c904b118a51ae5922808230ab3da554d670"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.3/mdoffice-0.1.3-macos-arm64"
+      sha256 "f21bfb307b383174b7944cba310a70a8bde3047711614cef8917e7a35ab41d20"
     end
 
     on_intel do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.2/mdoffice-0.1.2-macos-x86_64"
-      sha256 "a72a7af251bc0d7be9acc60fc93fabc4b0b48fc557b768d80161db2bb7dbb5b4"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.3/mdoffice-0.1.3-macos-x86_64"
+      sha256 "72d5a539ebc9f513206a1463daa13b82b47855528b4b418f6ab59923ddfdfef5"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.2/mdoffice-0.1.2-linux-x86_64"
-      sha256 "f1995cc02066a014ac368abf1d99674a2fc23531e7a7b0d18b19454c316bfd7a"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.3/mdoffice-0.1.3-linux-x86_64"
+      sha256 "b16639ca6f9d6b958dc206dad8d86ac30b91bfabfb950f60762fff7379696969"
     end
 
     on_arm do
-      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.2/mdoffice-0.1.2-linux-aarch64"
-      sha256 "a32b8da6b838a2b9edee9f7fe742044e1c45316dbe95e30af9fe3f371850d481"
+      url "https://github.com/markdown-office/mdoffice/releases/download/v0.1.3/mdoffice-0.1.3-linux-aarch64"
+      sha256 "ca97fff830df7bfda795e5d091558e946622c54c6053bdcbd1d03fe8ec124713"
     end
   end
 
