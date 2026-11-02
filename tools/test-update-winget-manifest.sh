@@ -67,6 +67,8 @@ export FIXTURE_STATE="${work}/state"
 export MDOFFICE_API="${api}"
 export MDOFFICE_REPO="markdown-office/mdoffice"
 export MDOFFICE_WINGET_OUTPUT="${work}/manifests"
+export MDOFFICE_WINGET_BASE="microsoft/winget-pkgs"
+export MDOFFICE_WINGET_FORK="markdown-office/winget-pkgs"
 
 manifests="${work}/manifests"
 directory="${manifests}/m/markdown-office/mdoffice"
@@ -189,11 +191,24 @@ check "writes nothing outside manifests/" \
 # The name of the branch, which is load-bearing: it ends up as the head of a
 # pull request against another repository, and a head is named by a path in the
 # API, where a component that is a version with dots in it cannot be read.
-branch_name="$(cat "${FIXTURE_STATE}/refs" | head -1)"
+branch_name="$(awk '{print $1}' "${FIXTURE_STATE}/refs" | head -1)"
 check "names the branch for the package and the version" \
   "${branch_name}" "mdoffice-1.2.3"
 check "names the branch with no directory in it" \
   "$([[ "${branch_name}" == */* ]] && echo yes || echo no)" "no"
+
+# Where the branch starts. The submission is measured against the base's
+# master, and the fork's master holds the manifests of the versions proposed
+# before and not yet merged — a branch cut from there carries them along, and
+# the submission then holds two versions where the validator wants one.
+branch_sha="$(awk '{print $2}' "${FIXTURE_STATE}/refs" | head -1)"
+check "cuts the branch from the base's master" \
+  "${branch_sha}" "the-head-of-the-base"
+
+# The fork's master is moved to the base's master, so that the pull request
+# opened against it shows the manifest and nothing else.
+check "moves the fork's master to the base's master" \
+  "$(cat "${FIXTURE_STATE}/fork-master")" "the-head-of-the-base"
 
 if [[ "${failures}" -ne 0 ]]
 then

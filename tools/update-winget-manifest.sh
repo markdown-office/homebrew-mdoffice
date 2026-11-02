@@ -20,6 +20,7 @@
 #   MDOFFICE_API             the GitHub API to ask          (default https://api.github.com)
 #   MDOFFICE_REPO            the repository to ask about    (default markdown-office/mdoffice)
 #   MDOFFICE_WINGET_OUTPUT   where to write the manifest   (default manifests)
+#   MDOFFICE_WINGET_BASE     the repository proposed against (default microsoft/winget-pkgs)
 #   MDOFFICE_WINGET_FORK     the fork to propose against   (default markdown-office/winget-pkgs)
 #   MDOFFICE_WINGET_SUBMIT   open the pull request         (default false)
 #   GITHUB_TOKEN             sent to the API when it is set
@@ -29,6 +30,7 @@ set -euo pipefail
 api="${MDOFFICE_API:-https://api.github.com}"
 repo="${MDOFFICE_REPO:-markdown-office/mdoffice}"
 output="${MDOFFICE_WINGET_OUTPUT:-manifests}"
+base="${MDOFFICE_WINGET_BASE:-microsoft/winget-pkgs}"
 fork="${MDOFFICE_WINGET_FORK:-markdown-office/winget-pkgs}"
 submit="${MDOFFICE_WINGET_SUBMIT:-false}"
 
@@ -174,12 +176,41 @@ fi
 # component that cannot be read. `manifests/markdown-office.mdoffice/0.1.1` is
 # refused; `mdoffice-0.1.1` is not.
 branch="mdoffice-${version}"
-base="$(curl "${curl_options[@]}" "${api}/repos/${fork}/git/ref/heads/master" | jq -r '.object.sha')"
 
-if [[ -z "${base}" || "${base}" == "null" ]]
+# The branch is cut from the base's master and not from the fork's.
+#
+# The fork is a staging area, and its master holds the manifests of the versions
+# that have been proposed and not yet merged: a manifest merged into it is a
+# version the base does not have. A branch cut from there carries those files
+# with it, and the submission then holds two versions where the validator wants
+# one. It refuses such a pull request and says so:
+#
+#   The pull request contains more than one manifest. Either singleton or multi
+#   file manifest under one version directory.
+#
+# The base's master is the one the submission is measured against, so it is the
+# one the branch has to start from.
+base_sha="$(curl "${curl_options[@]}" "${api}/repos/${base}/git/ref/heads/master" | jq -r '.object.sha')"
+
+if [[ -z "${base_sha}" || "${base_sha}" == "null" ]]
 then
-  echo "Could not read the head of ${fork}." >&2
+  echo "Could not read the head of ${base}." >&2
   exit 1
+fi
+
+# The fork's master is moved to the base's master, so that the pull request
+# opened against it shows the manifest and nothing else. A fork's master that
+# has fallen behind shows every commit the base has taken since, and one that
+# has been merged into shows the version before as well.
+fork_sha="$(curl "${curl_options[@]}" "${api}/repos/${fork}/git/ref/heads/master" | jq -r '.object.sha')"
+
+if [[ "${fork_sha}" != "${base_sha}" ]]
+then
+  curl "${curl_options[@]}" --request PATCH \
+    --data "{\"sha\": \"${base_sha}\", \"force\": true}" \
+    "${api}/repos/${fork}/git/refs/heads/master" >/dev/null
+
+  echo "The fork's master is now the base's master."
 fi
 
 # The branch is made only when it is not there. The workflow runs every day and
@@ -190,7 +221,7 @@ ref="$(curl "${curl_options[@]}" "${api}/repos/${fork}/git/ref/heads/${branch}" 
 if [[ -z "${ref}" || "${ref}" == "null" ]]
 then
   curl "${curl_options[@]}" --request POST \
-    --data "{\"ref\": \"refs/heads/${branch}\", \"sha\": \"${base}\"}" \
+    --data "{\"ref\": \"refs/heads/${branch}\", \"sha\": \"${base_sha}\"}" \
     "${api}/repos/${fork}/git/refs" >/dev/null
 fi
 

@@ -22,7 +22,7 @@ mkdir -p "${state}"
 # What GitHub answers with when it has nothing.
 NOT_FOUND='{"message":"Not Found"}'
 
-for remembered in refs pulls files
+for remembered in refs pulls files fork-master
 do
   touch "${state}/${remembered}"
 done
@@ -79,12 +79,19 @@ case "${method}" in
         fi
         ;;
       */git/ref/heads/master)
-        body='{"object":{"sha":"the-head-of-master"}}'
+        # The base's master and the fork's master are different commits, which
+        # is what makes the difference between them visible.
+        if [[ "${path}" == "repos/${MDOFFICE_WINGET_BASE}/git/ref/heads/master" ]]
+        then
+          body='{"object":{"sha":"the-head-of-the-base"}}'
+        else
+          body='{"object":{"sha":"the-head-of-the-fork"}}'
+        fi
         ;;
       */git/ref/heads/*)
         branch="${path##*/git/ref/heads/}"
 
-        if grep -qxF "${branch}" "${state}/refs"
+        if grep -qF "^${branch} " "${state}/refs"
         then
           body='{"object":{"sha":"the-branch"}}'
         else
@@ -126,13 +133,14 @@ case "${method}" in
       */git/refs)
         ref="$(printf '%s' "${data}" | jq -r '.ref // ""')"
         branch="${ref#refs/heads/}"
+        sha="$(printf '%s' "${data}" | jq -r '.sha // ""')"
 
-        if grep -qxF "${branch}" "${state}/refs"
+        if grep -qF "^${branch} " "${state}/refs"
         then
           code="422"
           body='{"message":"Reference already exists"}'
         else
-          printf '%s\n' "${branch}" >>"${state}/refs"
+          printf '%s %s\n' "${branch}" "${sha}" >>"${state}/refs"
           body="{\"ref\":\"${ref}\"}"
         fi
         ;;
@@ -159,6 +167,19 @@ case "${method}" in
       */contents/*)
         printf '%s\n' "${path##*/contents/}" >>"${state}/files"
         body='{"content":{"sha":"the-file"}}'
+        ;;
+      *)
+        code="404"
+        body="${NOT_FOUND}"
+        ;;
+    esac
+    ;;
+  PATCH)
+    case "${path}" in
+      */git/refs/heads/master)
+        sha="$(printf '%s' "${data}" | jq -r '.sha // ""')"
+        printf '%s\n' "${sha}" >"${state}/fork-master"
+        body="{\"ref\":\"refs/heads/master\",\"object\":{\"sha\":\"${sha}\"}}"
         ;;
       *)
         code="404"
