@@ -99,7 +99,10 @@ then
   exit 1
 fi
 
-checksum="$(sha256_of "${work}/${name}")"
+# `winget` writes the checksum in upper case, and every manifest in the repository
+# carries it that way, so the manifest does too. The digest is the same number;
+# only its case differs, and the reader of the manifest is a person.
+checksum="$(sha256_of "${work}/${name}" | tr '[:lower:]' '[:upper:]')"
 released="$(jq -r '.published_at // "" | split("T")[0]' "${work}/release.json")"
 
 directory="${output}/m/markdown-office/mdoffice/${version}"

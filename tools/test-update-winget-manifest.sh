@@ -83,7 +83,7 @@ check "writes nothing" "$([[ -d "${directory}" ]] && echo yes || echo no)" "no"
 
 echo "a release"
 printf 'the windows binary\n' >"${www}/assets/mdoffice-1.2.3-windows-x64.exe"
-sum="$(shasum -a 256 "${www}/assets/mdoffice-1.2.3-windows-x64.exe" | cut -d' ' -f1)"
+sum="$(shasum -a 256 "${www}/assets/mdoffice-1.2.3-windows-x64.exe" | cut -d' ' -f1 | tr '[:lower:]' '[:upper:]')"
 
 cat >"${FIXTURE_STATE}/release.json" <<JSON
 {
